@@ -123,7 +123,7 @@ end
 
 --------------------------------------------------------------
 -- Net for predicting primitives
-local netPred, outChannelsInput = vE.convEncoderSimple3d(5,4,1,params.useBn)
+local netPred, outChannelsInput = vE.convEncoderImage(5,4,1,params.useBn)
 netPred:apply(nUtils.weightsInit)
 local outChannels = outChannelsInput
 for nLayer=1,2 do -- fc layers for joint reasoning

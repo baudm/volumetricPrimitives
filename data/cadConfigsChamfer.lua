@@ -1,4 +1,5 @@
 require 'nn'
+require 'image'
 local matio = require 'matio'
 local primitives = dofile('../modules/primitives.lua')
 local M = {}
@@ -37,7 +38,8 @@ function SimpleCad.new(params)
     self.startModelIndex = 0
     self.modelNames = BuildArray(paths.files(self.modelsDir , '.mat'))
     table.sort(self.modelNames)
-    
+   
+    self.loadedImages = torch.Tensor(self.batchSize, 1, 402, 402):fill(0)
     self.loadedVoxels = torch.Tensor(self.batchSize, 1, self.modelSize, self.modelSize, self.modelSize):fill(0)
     self.loadedTsdfs = torch.Tensor(self.batchSize, 1, self.modelSize, self.modelSize, self.modelSize):fill(0)
     self.loadedCPs = torch.Tensor(self.batchSize, 1, self.modelSize, self.modelSize, self.modelSize, 3):fill(0)
@@ -56,7 +58,12 @@ end
 function SimpleCad:reloadShapes()
     for ix = 1,self.batchSize do
         self.startModelIndex = torch.random(1,#(self.modelNames))
+	local img = paths.concat(self.modelsDir,'img', string.sub(self.modelNames[self.startModelIndex], 0, -5) .. '.png')
+	--print(img)
+	local im = image.load(img, 1, 'float')
+	--print(im)
         local shape = matio.load(paths.concat(self.modelsDir,self.modelNames[self.startModelIndex]),{'Volume','tsdf','surfaceSamples','closestPoints'})
+	self.loadedImages[ix][1]:copy(im:typeAs(self.loadedImages))
         self.loadedVoxels[ix][1]:copy(shape.Volume:typeAs(self.loadedVoxels))
         self.loadedTsdfs[ix][1]:copy(shape.tsdf:typeAs(self.loadedTsdfs))
         self.loadedCPs[ix][1]:copy(shape.closestPoints:typeAs(self.loadedCPs))
@@ -83,7 +90,14 @@ function SimpleCad:forward()
         end
     end
     --print(outSamplePoints:min(), outSamplePoints:max())
-    output = {self.loadedShapes:clone(), outSampleTsfds, outSamplePoints}
+   
+    --print('hey a')
+    --print(self.loadedShapes:size())
+    --print(self.loadedImages:size())
+    --print('hey b')
+    
+    --output = {self.loadedShapes:clone(), outSampleTsfds, outSamplePoints}
+    output = {self.loadedImages:clone(), outSampleTsfds, outSamplePoints}
         
     return output
 end
@@ -96,7 +110,8 @@ function SimpleCad:forwardTest()
     self.iter = self.iter+1
     local outTsfds = self.loadedTsdfs:reshape(self.batchSize, self.gridSize^3)
     local outPoints = self.gridPoints:clone()
-    local output = {self.loadedShapes, outTsfds, outPoints}
+    --local output = {self.loadedShapes, outTsfds, outPoints}
+    local output = {self.loadedImages, outTsfds, outPoints}
     return output
 end
 

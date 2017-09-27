@@ -1,6 +1,43 @@
 require 'nn'
 local M = {}
 
+function M.convEncoderImage(nLayers, nChannelsInit, nInputChannels, useBn)
+    local nInputChannels = nInputChannels or 1
+    local nChannelsInit = nChannelsInit or 8
+    local useBn = (useBn~=false) and true
+    local nOutputChannels = nChannelsInit
+    local encoder = nn.Sequential()
+
+
+    encoder:add(nn.SpatialConvolution(nInputChannels, 4, 23, 23, 1, 1))
+    if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
+    encoder:add(nn.LeakyReLU(0.2, true))
+    encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
+
+    encoder:add(nn.SpatialConvolution(4, 4, 23, 23, 1, 1))
+    if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
+    encoder:add(nn.LeakyReLU(0.2, true))
+    encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
+
+    encoder:add(nn.SpatialConvolution(4, 4, 21, 21, 1, 1))
+    if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
+    encoder:add(nn.LeakyReLU(0.2, true))
+    encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
+
+    nInputChannels = 4
+
+    for l=1,nLayers do
+        encoder:add(nn.SpatialConvolution(nInputChannels, nOutputChannels, 3, 3, 1, 1, 1, 1))
+        if useBn then encoder:add(nn.SpatialBatchNormalization(nOutputChannels)) end
+        encoder:add(nn.LeakyReLU(0.2, true))
+        encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
+        nInputChannels = nOutputChannels
+        nOutputChannels = nOutputChannels*2
+    end
+    encoder:add(nn.Unsqueeze(5))
+    return encoder, nOutputChannels/2 -- division by two offsets the mutiplication in last iteration
+end
+
 function M.convEncoderSimple3d(nLayers, nChannelsInit, nInputChannels, useBn)
     local nInputChannels = nInputChannels or 1
     local nChannelsInit = nChannelsInit or 8
