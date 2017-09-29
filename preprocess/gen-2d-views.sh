@@ -5,7 +5,7 @@
 SYNSET_PATH="$1"
 SYNSET="$(basename $SYNSET_PATH)"
 
-IMAGE_DIR="../cachedir/shapenet/images/${SYNSET}"
+IMAGE_DIR="../cachedir/shapenet/chamferData/${SYNSET}/img"
 
 mkdir -p $IMAGE_DIR
 
@@ -16,7 +16,7 @@ process() {
 	echo $name
 	[ -f "$png" ] && continue
 	../renderer/render.sh `which blender` ../renderer/model.blend "${path}/model.obj" "$png"
-	mogrify -crop 402x402+350+1 "$png"
+	mogrify -crop 400x400+350+1 "$png"
 	convert "$png" -colorspace gray -average "$png"
 }
 

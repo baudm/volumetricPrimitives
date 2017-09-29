@@ -8,18 +8,17 @@ function M.convEncoderImage(nLayers, nChannelsInit, nInputChannels, useBn)
     local nOutputChannels = nChannelsInit
     local encoder = nn.Sequential()
 
-
-    encoder:add(nn.SpatialConvolution(nInputChannels, 4, 23, 23, 1, 1))
+    encoder:add(nn.SpatialConvolution(nInputChannels, 2, 23, 23, 1, 1))
     if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
     encoder:add(nn.LeakyReLU(0.2, true))
     encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
 
-    encoder:add(nn.SpatialConvolution(4, 4, 23, 23, 1, 1))
+    encoder:add(nn.SpatialConvolution(2, 2, 23, 23, 1, 1, 1, 1))
     if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
     encoder:add(nn.LeakyReLU(0.2, true))
     encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
 
-    encoder:add(nn.SpatialConvolution(4, 4, 21, 21, 1, 1))
+    encoder:add(nn.SpatialConvolution(2, 4, 21, 21, 1, 1))
     if useBn then encoder:add(nn.SpatialBatchNormalization(4)) end
     encoder:add(nn.LeakyReLU(0.2, true))
     encoder:add(nn.SpatialMaxPooling(2, 2, 2, 2))
